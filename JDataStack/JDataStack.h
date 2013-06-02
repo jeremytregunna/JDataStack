@@ -18,7 +18,7 @@
 @property (nonatomic, readonly) NSPersistentStoreCoordinator* persistentStoreCoordinator;
 @property (nonatomic, readonly) NSManagedObjectModel* managedObjectModel;
 
-- (instancetype)initWithModelName:(NSString*)modelName delegate:(id<JDataStackDelegate>)delegate;
+- (instancetype)initWithDelegate:(id<JDataStackDelegate>)delegate;
 
 - (NSManagedObjectContext*)newPrivateManagedObjectContext;
 
@@ -31,7 +31,11 @@
 @end
 
 @protocol JDataStackDelegate <NSObject>
+@required
+- (NSURL*)modelURLForDataStack:(JDataStack*)dataStack;
+- (void)dataStack:(JDataStack*)dataStack preflightSetupForPersistentStoreCoordinator:(NSPersistentStoreCoordinator*)persistentStoreCoordinator;
 @optional
 - (void)dataStack:(JDataStack*)dataStack willSaveWithSaveContext:(NSManagedObjectContext*)saveContext;
 - (void)dataStack:(JDataStack*)dataStack didSaveWithSaveContext:(NSManagedObjectContext*)saveContext;
+- (void)dataStack:(JDataStack*)dataStack didFailWithError:(NSError*)error;
 @end

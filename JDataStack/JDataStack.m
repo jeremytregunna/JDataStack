@@ -8,22 +8,25 @@
 
 #import "JDataStack.h"
 
+@interface NSIncrementalStore (AFIncrementalStoreAdditions)
+- (NSPersistentStoreCoordinator*)backingPersistentStoreCoordinator;
+@end
+
 @interface JDataStack ()
 @property (nonatomic, strong) id<JDataStackDelegate> delegate;
-@property (nonatomic, copy) NSString* modelName;
+
 - (NSURL*)applicationDocumentsDirectory;
 @end
 
 @implementation JDataStack
 
 @synthesize delegate = _delegate;
-@synthesize modelName = _modelName;
 @synthesize mainManagedObjectContext = _mainManagedObjectContext;
 @synthesize persistentStoreCoordinator = _persistentStoreCoordinator;
 @synthesize managedObjectModel = _managedObjectModel;
 @synthesize writeManagedObjectContext = _writeManagedObjectContext;
 
-- (instancetype)initWithModelName:(NSString*)modelName delegate:(id<JDataStackDelegate>)delegate
+- (instancetype)initWithDelegate:(id<JDataStackDelegate>)delegate
 {
     if((self = [super init]))
     {
@@ -31,7 +34,6 @@
         [center addObserver:self selector:@selector(_willSave:) name:NSManagedObjectContextWillSaveNotification object:nil];
         [center addObserver:self selector:@selector(_didSave:) name:NSManagedObjectContextDidSaveNotification object:nil];
 
-        self.modelName = modelName;
         self.delegate = delegate;
     }
     return self;
@@ -151,7 +153,7 @@
         if(_managedObjectModel != nil)
             return _managedObjectModel;
 
-        NSURL* modelURL = [[NSBundle mainBundle] URLForResource:_modelName withExtension:@"momd"];
+        NSURL* modelURL = [self.delegate modelURLForDataStack:self];
         _managedObjectModel = [[NSManagedObjectModel alloc] initWithContentsOfURL:modelURL];
         return _managedObjectModel;
     }
@@ -163,27 +165,11 @@
     {
         if(_persistentStoreCoordinator != nil)
             return _persistentStoreCoordinator;
-        NSURL* storeURL = [[self applicationDocumentsDirectory] URLByAppendingPathComponent:[_modelName stringByAppendingString:@".sqlite"]];
 
-        NSError* error = nil;
         _persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:[self managedObjectModel]];
-        if(![_persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
-        {
-            [[NSFileManager defaultManager] removeItemAtURL:storeURL error:nil];
-            if(![_persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
-            {
-                NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
-                abort();
-            }
-        }
 
-        NSDictionary* fileAttributes = [NSDictionary dictionaryWithObject:NSFileProtectionComplete forKey:NSFileProtectionKey];
-        if(![[NSFileManager defaultManager] setAttributes:fileAttributes ofItemAtPath:[storeURL path] error:&error])
-        {
-#ifdef DEBUG
-            NSLog(@"Unable to set file protection attribute on store. Error: %@", error);
-#endif
-        }
+        [self.delegate dataStack:self preflightSetupForPersistentStoreCoordinator:_persistentStoreCoordinator];
+
         return _persistentStoreCoordinator;
     }
 }
