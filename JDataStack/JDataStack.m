@@ -41,7 +41,9 @@
 
 - (void)dealloc
 {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    NSNotificationCenter* center = [NSNotificationCenter defaultCenter];
+    [center removeObserver:self name:NSManagedObjectContextWillSaveNotification object:nil];
+    [center removeObserver:self name:NSManagedObjectContextDidSaveNotification object:nil];
     self.delegate = nil;
 }
 
