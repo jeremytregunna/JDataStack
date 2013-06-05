@@ -7,7 +7,7 @@ JDataStack is an implementation of a multi-context Core Data stack for iOS 5.0 a
 
 Create an instance of JDataStack like this:
 
-    JDataStack* stack = [[JDataStack alloc] initWithModelName:@"Foo" delegate:delegateObject];
+    JDataStack* stack = [[JDataStack alloc] initWithDelegate:delegateObject];
 
 Set up your delegateObject with the two required methods, something like this:
 
