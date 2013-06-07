@@ -8,10 +8,6 @@
 
 #import "JDataStack.h"
 
-@interface NSIncrementalStore (AFIncrementalStoreAdditions)
-- (NSPersistentStoreCoordinator*)backingPersistentStoreCoordinator;
-@end
-
 @interface JDataStack ()
 @property (nonatomic, strong) id<JDataStackDelegate> delegate;
 
